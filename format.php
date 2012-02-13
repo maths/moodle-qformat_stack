@@ -1,24 +1,38 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of Stack - http://stack.bham.ac.uk/
 //
-// Moodle is free software: you can redistribute it and/or modify
+// Stack is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// Moodle is distributed in the hope that it will be useful,
+// Stack is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+// along with Stack.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * This file defines the main qformat_stack plugin.
+ *
+ * @package   qformat_stack
+ * @copyright 2012 Matti Pauna
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 
 defined('MOODLE_INTERNAL') || die();
 
 
-
+/**
+ * This question importer class will import the Stack 2.0 XML format.
+ *
+ * This makes it possible to import existing stack questions into Moodle.
+ *
+ * @copyright 2012 Matti Pauna
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class qformat_stack extends qformat_default {
 
     public function provide_import() {
@@ -26,13 +40,16 @@ class qformat_stack extends qformat_default {
     }
 
     public function readquestions($lines) {
-        return $this->questionstoarray(implode($lines));
+        $data = $this->questionstoarray(implode($lines));
+        var_dump($data);
+
+        return array();
     }
 
     public function mime_type() {
         return 'application/xml';
     }
-    
+
     protected function text_field($text) {
         return array(
             'text' => htmlspecialchars(trim($text), ENT_NOQUOTES),
@@ -55,11 +72,13 @@ class qformat_stack extends qformat_default {
         $root = new SimpleXMLElement($xmlstr);
         $result = array();
 
-        if ($root->getName() == 'assessmentItem')
-        $result[] = questiontoarray($root);
-        else if ($root->getName() == 'mathQuiz')
-        foreach ($root->assessmentItem as $assessmentItem)
-        $result[] = questiontoarray($assessmentItem);
+        if ($root->getName() == 'assessmentItem') {
+            $result[] = $this->questiontoarray($root);
+        } else if ($root->getName() == 'mathQuiz') {
+            foreach ($root->assessmentItem as $assessmentItem) {
+                $result[] = $this->questiontoarray($assessmentItem);
+            }
+        }
 
         return $result;
     }
@@ -92,18 +111,18 @@ class qformat_stack extends qformat_default {
     protected function questiontoarray($assessmentItem) {
         $question = array();
         $questionCasValues = array();
-         
+
         $questionCasValues['questionStem'] =
-        (string) $assessmentItem->questionCasValues->questionStem->castext;
+                (string) $assessmentItem->questionCasValues->questionStem->castext;
 
         $questionCasValues['questionVariables'] =
-        (string) $assessmentItem->questionCasValues->questionVariables->rawKeyVals;
+                (string) $assessmentItem->questionCasValues->questionVariables->rawKeyVals;
 
         $questionCasValues['workedSolution'] =
-        (string) $assessmentItem->questionCasValues->workedSolution->castext;
+                (string) $assessmentItem->questionCasValues->workedSolution->castext;
 
         $questionCasValues['questionNote'] =
-        (string) $assessmentItem->questionCasValues->questionNote->castext;
+                (string) $assessmentItem->questionCasValues->questionNote->castext;
 
         $question['questionCasValues'] = $questionCasValues;
 
@@ -148,8 +167,8 @@ class qformat_stack extends qformat_default {
                 $PR['studentAns'] = (string) $PRXML->studentAns;
                 $PR['testoptions'] = (string) $PRXML->testoptions;
                 $PR['quietAnsTest'] = (string) $PRXML->quietAnsTest;
-                $PR['true'] = getnextPR('true', $PRXML);
-                $PR['false'] = getnextPR('false', $PRXML);
+                $PR['true'] = $this->getnextPR('true', $PRXML);
+                $PR['false'] = $this->getnextPR('false', $PRXML);
                 $PR['teacherNote'] = (string) $PRXML->teacherNote;
 
                 $PotentialResponses[] = $PR;
@@ -169,14 +188,16 @@ class qformat_stack extends qformat_default {
         $question['ItemOptions'] = $ItemOptions;
 
         $ItemTests = array();
-        if($assessmentItem->ItemTests) {
+        if ($assessmentItem->ItemTests) {
             foreach ($assessmentItem->ItemTests->test as $testXML) {
                 $col1 = array(
-            	'key' => (string) $testXML->col[0]->key, 
-            	'value' => (string) $testXML->col[0]->value);
+                    'key' => (string) $testXML->col[0]->key,
+                    'value' => (string) $testXML->col[0]->value,
+                );
                 $col2 = array(
-            	'key' => (string) $testXML->col[1]->key, 
-            	'value' => (string) $testXML->col[1]->value);
+                    'key' => (string) $testXML->col[1]->key,
+                    'value' => (string) $testXML->col[1]->value
+                );
                 $test = array($col1, $col2);
                 $ItemTests[] = $test;
             }
@@ -185,5 +206,4 @@ class qformat_stack extends qformat_default {
 
         return $question;
     }
-
 }
