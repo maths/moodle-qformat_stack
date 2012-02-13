@@ -30,3 +30,5 @@ $plugin->requires  = 2011102700;
 $plugin->cron = 0;
 $plugin->component = 'qformat_stack';
 $plugin->maturity  = MATURITY_ALPHA;
+
+$plugin->dependencies = array('qtype_stack' => ANY_VERSION);
