@@ -164,7 +164,7 @@ class qformat_stack extends qformat_default {
                 $PR['id'] = (string) $PRXML['id'];
                 $PR['answerTest'] = (string) $PRXML->answerTest;
                 if ('Equal_Com_Ass' == $PR['answerTest']) {
-		    PR['answerTest'] = 'EqualComAss';
+		    $PR['answerTest'] = 'EqualComAss';
 		}
                 $PR['teachersAns'] = (string) $PRXML->teachersAns;
                 $PR['studentAns'] = (string) $PRXML->studentAns;
