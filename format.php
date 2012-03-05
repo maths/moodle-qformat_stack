@@ -41,7 +41,13 @@ class qformat_stack extends qformat_default {
 
     public function readquestions($lines) {
         $data = $this->questionstoarray(implode($lines));
-        var_dump($data);
+
+        echo "<pre>";
+        print_r($data);
+        echo "</pre>";
+
+        echo "<textarea rows=\"50\" cols=\"100\">".json_encode($data)."</textarea>";
+
 
         return array();
     }
@@ -164,8 +170,8 @@ class qformat_stack extends qformat_default {
                 $PR['id'] = (string) $PRXML['id'];
                 $PR['answerTest'] = (string) $PRXML->answerTest;
                 if ('Equal_Com_Ass' == $PR['answerTest']) {
-		    $PR['answerTest'] = 'EqualComAss';
-		}
+                    $PR['answerTest'] = 'EqualComAss';
+                }
                 $PR['teachersAns'] = (string) $PRXML->teachersAns;
                 $PR['studentAns'] = (string) $PRXML->studentAns;
                 $PR['testoptions'] = (string) $PRXML->testoptions;
