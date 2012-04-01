@@ -23,6 +23,6 @@
  */
 
 
-$string['pluginname'] = 'STACK format';
+$string['pluginname'] = 'STACK 2.0 format';
 $string['pluginname_help'] = 'This is a format for importing STACK questions from an xml file.';
 $string['pluginname_link'] = 'qformat/stack';
