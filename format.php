@@ -39,6 +39,10 @@ class qformat_stack extends qformat_default {
         return true;
     }
 
+    public function provide_export() {
+        return false;
+    }
+
     public function readquestions($lines) {
         $data = $this->questionstoarray(implode($lines));
 
@@ -122,7 +126,7 @@ class qformat_stack extends qformat_default {
                 (string) $assessmentItem->questionCasValues->questionStem->castext;
 
         $questionCasValues['questionVariables'] =
-                (string) $assessmentItem->questionCasValues->questionVariables->rawKeyVals;
+                $this->convert_keyvals((string) $assessmentItem->questionCasValues->questionVariables->rawKeyVals);
 
         $questionCasValues['workedSolution'] =
                 (string) $assessmentItem->questionCasValues->workedSolution->castext;
@@ -162,7 +166,7 @@ class qformat_stack extends qformat_default {
             $prt['prtName'] = (string) $prtXML->prtname;
             $prt['questionValue'] = (string) $prtXML->questionValue;
             $prt['autoSimplify'] = (string) $prtXML->autoSimplify;
-            $prt['feedbackVariables'] = (string) $prtXML->feedbackVariables;
+            $prt['feedbackVariables'] = $this->convert_keyvals((string) $prtXML->feedbackVariables);
 
             $PotentialResponses = array();
             foreach ($prtXML->PotentialResponses->PR as $PRXML) {
@@ -214,5 +218,41 @@ class qformat_stack extends qformat_default {
         $question['ItemTests'] = $ItemTests;
 
         return $question;
+    }
+
+    /**
+     * Process the raw keyvals fields, i.e. question and answer variables
+     * to convert them into the new format.
+     * @param  string incoming raw keyvals.
+     * @return string converted raw keyvals.
+     */
+    public function convert_keyvals($strin) {
+
+        $str = str_replace(';', "\n", $strin);
+        $kv_array = explode("\n", $str);
+
+        $strout = '';
+        foreach ($kv_array as $kvs) {
+            $kvs = trim($kvs);
+            if ('' != $kvs) {
+                // Split over the first occurrence of the equals sign, turning this into normal Maxima assignment.
+                $i = strpos($kvs, '=');
+                if (false === $i) {
+                    $val = $kvs;
+                } else {
+                    // Need to check we don't have a function definition...
+                    if (':'===substr($kvs, $i-1, 1)) {
+                        $val = $kvs;
+                    } else {
+                        $val = trim(trim(substr($kvs, 0, $i)).':'.trim(substr($kvs, $i+1)));
+                    }
+                }
+
+                $strout .= $val.";\n";
+            }
+        }
+
+        $strout = trim($strout);
+        return $strout;
     }
 }
