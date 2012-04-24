@@ -24,7 +24,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-
 /**
  * This question importer class will import the Stack 2.0 XML format.
  *
@@ -44,16 +43,15 @@ class qformat_stack extends qformat_default {
     }
 
     public function readquestions($lines) {
-        $data = $this->questionstoarray(implode($lines));
 
-        echo "<pre>";
-        print_r($data);
-        echo "</pre>";
+        $data = $this->questionstoformfrom(implode($lines));
 
-        echo "<textarea rows=\"50\" cols=\"100\">".json_encode($data)."</textarea>";
+        //echo "<pre>";
+        //print_r($data);
+        //echo "</pre>";
 
-
-        return array();
+        //return null;
+        return $data;
     }
 
     public function mime_type() {
@@ -78,15 +76,20 @@ class qformat_stack extends qformat_default {
      * @param string $xmlstr STACK questions as an XML string
      * @return array containing question arrays
      */
-    protected function questionstoarray($xmlstr) {
+    protected function questionstoformfrom($xmlstr) {
+
+        // Slight hack, since SimpleXMLElement does not like these names....
+        $xmlstr = str_replace('<dc:', '<dc', $xmlstr);
+        $xmlstr = str_replace('</dc:', '</dc', $xmlstr);
+        
         $root = new SimpleXMLElement($xmlstr);
         $result = array();
 
         if ($root->getName() == 'assessmentItem') {
-            $result[] = $this->questiontoarray($root);
+            $result[] = $this->questiontoformfrom($root);
         } else if ($root->getName() == 'mathQuiz') {
-            foreach ($root->assessmentItem as $assessmentItem) {
-                $result[] = $this->questiontoarray($assessmentItem);
+            foreach ($root->assessmentItem as $assessmentitem) {
+                $result[] = $this->questiontoformfrom($assessmentitem);
             }
         }
 
@@ -96,113 +99,203 @@ class qformat_stack extends qformat_default {
     /**
      * Utility function for processing next potential response tree elements
      * @param string $tf which node, true or false
-     * @param SimpleXMLElement $PRXML potential response element
+     * @param SimpleXMLElement $prxml potential response element
      * @return subelements as an array
      */
-     protected function getnextPR($tf, $PRXML) {
+     protected function getnextpr($tf, $prxml) {
         $result = array();
 
-        $node = $PRXML->$tf;
+        $node = $prxml->$tf;
 
-        $result['rawModMark'] = (string) $node->rawModMark;
-        $result['rawMark'] = (string) $node->rawMark;
-        $result['feedback'] = (string) $node->feedback;
-        $result['ansnote'] = (string) $node->ansnote;
-        $result['nextPR'] = (string) $node->nextPR;
+        $result['scoremode'] = (string) $node->rawModMark;
+        $result['score'] = (string) $node->rawMark;
+        $result['penalty'] = (string) $node->penalty;
+        $result['feedback'] = array('text' => (string) $node->feedback, 'format' => FORMAT_HTML, 'files' => array());
+        $result['answernote'] = (string) $node->ansnote;
+        $result['nextnode'] = (string) $node->nextPR;
 
         return $result;
     }
 
     /**
      * Process a single question into an array
-     * @param SimpleXMLElement $assessmentItem
+     * @param SimpleXMLElement $assessmentitem
      * @return the question as an array
      */
-    protected function questiontoarray($assessmentItem) {
-        $question = array();
-        $questionCasValues = array();
+    protected function questiontoformfrom($assessmentitem) {
 
-        $questionCasValues['questionStem'] =
-                (string) $assessmentItem->questionCasValues->questionStem->castext;
+        $question = new stdClass();
+        $question->qtype                 = 'stack';
+        $question->name                  = (string) $assessmentitem->MetaData->dctitle->selection;
 
-        $questionCasValues['questionVariables'] =
-                $this->convert_keyvals((string) $assessmentItem->questionCasValues->questionVariables->rawKeyVals);
+        $question->variantsselectionseed = '';
+        $question->defaultmark           = 1;
+        $question->length                = 1;
+        //$question->penalty               = 0;
 
-        $questionCasValues['workedSolution'] =
-                (string) $assessmentItem->questionCasValues->workedSolution->castext;
+        // Note, new tags for [[input:ans1]] and validation are converted below, after inputs
+        $question->questiontext          = (string) $assessmentitem->questionCasValues->questionStem->castext;
+        $question->questiontextformat    = FORMAT_HTML;
+        // Always blank on import - we assume PRT feedback is embedded in the question.
+        $question->specificfeedback      = array('text' => '', 'format' => FORMAT_HTML, 'files' => array());
+        $question->generalfeedback       = (string) $assessmentitem->questionCasValues->workedSolution->castext;
+        $question->generalfeedbackformat = FORMAT_HTML;
 
-        $questionCasValues['questionNote'] =
-                (string) $assessmentItem->questionCasValues->questionNote->castext;
+        $question->questionvariables     = $this->convert_keyvals((string) $assessmentitem->questionCasValues->questionVariables->rawKeyVals);
+        $question->questionnote          = (string) $assessmentitem->questionCasValues->questionNote->castext;
 
-        $question['questionCasValues'] = $questionCasValues;
+        /*********************************************************************/
+        // Question level options
+        $itemoptions = array();
+        foreach ($assessmentitem->ItemOptions->stackoption as $stackoptionXML) {
+            $name = (string) $stackoptionXML->name;
+            $value = $this->convert_bools((string) $stackoptionXML->selected);
+            $itemoptions[$name] = $value;
+        }
+        // Not all the STACK 2 options are used.  Some are thrown away.
+        $question->questionsimplify      = $itemoptions['Simplify'];
+        $question->assumepositive        = $itemoptions['AssumePos'];
+        $question->multiplicationsign    = $itemoptions['MultiplicationSign'];
+        $question->sqrtsign              = $itemoptions['SqrtSign'];
+        $question->complexno             = $itemoptions['ComplexNo'];
+        $question->markmode              = $itemoptions['MarkModMethod'];
+        $question->prtcorrect            = array('text' => $itemoptions['FeedbackGenericCorrect'], 'format' => FORMAT_HTML, 'files' => array());;
+        $question->prtpartiallycorrect   = array('text' => $itemoptions['FeedbackGenericIncorrect'], 'format' => FORMAT_HTML, 'files' => array());;
+        $question->prtincorrect          = array('text' => $itemoptions['FeedbackGenericPCorrect'], 'format' => FORMAT_HTML, 'files' => array());;
+
+        /*********************************************************************/
+        // Input elements
+        $inputtypemapping = array(
+                    'Algebraic Input'  => 'algebraic',
+                    'True/False'       => 'boolean',
+                    'Textarea'         => 'textarea',
+                    'Single Character' => 'singlechar',
+                    //'Matrix'           => '?',
+                    //'List'             => '?',
+                    //'DropDownList'     => '?',
+        );
 
         $questionparts = array();
-        foreach ($assessmentItem->questionparts->questionpart as $questionpartXML) {
+        foreach ($assessmentitem->questionparts->questionpart as $questionpartXML) {
             $questionpart = array();
 
-            $questionpart['name'] = (string) $questionpartXML->name;
-            $questionpart['inputType'] = (string) $questionpartXML->inputType->selection;
-            $questionpart['teachersAns'] = (string) $questionpartXML->teachersAns->casString;
-            $questionpart['studentAnsKey'] = (string) $questionpartXML->studentAnsKey;
-            $questionpart['syntax'] = (string) $questionpartXML->syntax;
-            $questionpart['studentAnsKey'] = (string) $questionpartXML->studentAnsKey;
+            $inputtype = (string) $questionpartXML->inputType->selection;
+            if (array_key_exists($inputtype, $inputtypemapping)) {
+                $questionpart['type'] = $inputtypemapping[$inputtype];
+            } else {
+                throw new Exception('STACK 2 importer tried to set an input type named '.$inputtype.' for input '.$questionpart['studentanskey'].'.  This has not yet been implemented in STACK 3.');
+            }
 
-            $stackoptions = array();
+            $inputoptions = array();
             foreach ($questionpartXML->stackoption as $stackoptionXML) {
                 $name = (string) $stackoptionXML->name;
-                $value = (string) $stackoptionXML->selected;
-                $stackoptions[$name] = $value;
+                $value = $this->convert_bools((string) $stackoptionXML->selected);
+                $inputoptions[$name] = $value;
             }
-            $questionpart['stackoptions'] = $stackoptions;
 
-            $questionpart['forbiddenWords'] = (string) $questionpartXML->forbiddenWords->Forbid;
-            $questionparts[] = $questionpart;
+            $questionpart['tans']               = (string) $questionpartXML->teachersAns->casString;
+            $questionpart['boxsize']            = (string) $questionpartXML->boxsize;
+            $questionpart['insertstars']        = $inputoptions['insertStars'];
+            $questionpart['syntaxhint']         = (string) $questionpartXML->syntax;
+            $questionpart['forbidwords']        = (string) $questionpartXML->forbiddenWords->Forbid;
+            $questionpart['forbidfloat']        = $inputoptions['forbidFloats'];
+            $questionpart['requirelowestterms'] = $inputoptions['lowestTerms'];
+            $questionpart['checkanswertype']    = $inputoptions['sameType'];
+            $questionpart['strictsyntax']       = $inputoptions['formalSyntax'];
+            // STACK 2 exporter does not seem to export these correctly anyway!
+            $questionpart['mustverify']         = 1;
+            $questionpart['showvalidation']     = 1;
+
+            $name = (string) $questionpartXML->name;
+            $questionparts[$name] = $questionpart;
         }
-        $question['questionparts'] = $questionparts;
+        $inputnames = array();
+        foreach ($questionparts as $anskey => $questionpart) {
+            $inputnames[] = $anskey;
+            foreach ($questionpart as $key => $val) {
+                $questionkey = $anskey.$key;
+                $question->$questionkey = $val;
+            }
+        }
+        // Change the input tags for the new versions.
+        $question->questiontext = $this->convert_questiontext($question->questiontext, $inputnames);
 
-        $PotentialResponseTrees = array();
-        foreach ($assessmentItem->PotentialResponseTrees->PotentialResponseTree as $prtXML) {
+        /*********************************************************************/
+        // Potential response trees
+        $potentialresponsetrees = array();
+        foreach ($assessmentitem->PotentialResponseTrees->PotentialResponseTree as $prtXML) {
+            $name = (string) $prtXML->prtname;
+            // STACK adds this for export purposes, because it can't cope with PRTs which are just a number.
+            $name = str_replace('PotResTree_', '', $name);
+
             $prt = array();
-            $prt['prtName'] = (string) $prtXML->prtname;
-            $prt['questionValue'] = (string) $prtXML->questionValue;
-            $prt['autoSimplify'] = (string) $prtXML->autoSimplify;
-            $prt['feedbackVariables'] = $this->convert_keyvals((string) $prtXML->feedbackVariables);
+            $prt['value'] = (int) $prtXML->questionValue;
+            $prt['autosimplify'] = $this->convert_bools((string) $prtXML->autoSimplify);
+            $prt['feedbackvariables'] = $this->convert_keyvals((string) $prtXML->feedbackVariables);
+        
+            $potentialresponses = array();
+            foreach ($prtXML->PotentialResponses->PR as $prxml) {
+                $id = (string) $prxml['id'];
 
-            $PotentialResponses = array();
-            foreach ($prtXML->PotentialResponses->PR as $PRXML) {
-                $PR = array();
-                $PR['id'] = (string) $PRXML['id'];
-                $PR['answerTest'] = (string) $PRXML->answerTest;
-                if ('Equal_Com_Ass' == $PR['answerTest']) {
-                    $PR['answerTest'] = 'EqualComAss';
+                $pr = array();
+                $pr['answertest'] = (string) $prxml->answerTest;
+                if ('Equal_Com_Ass' == $pr['answertest']) {
+                    $PR['answertest'] = 'EqualComAss';
                 }
-                $PR['teachersAns'] = (string) $PRXML->teachersAns;
-                $PR['studentAns'] = (string) $PRXML->studentAns;
-                $PR['testoptions'] = (string) $PRXML->testoptions;
-                $PR['quietAnsTest'] = (string) $PRXML->quietAnsTest;
-                $PR['true'] = $this->getnextPR('true', $PRXML);
-                $PR['false'] = $this->getnextPR('false', $PRXML);
-                $PR['teacherNote'] = (string) $PRXML->teacherNote;
-
-                $PotentialResponses[] = $PR;
+                $pr['tans'] = (string) $prxml->teachersAns;
+                $pr['sans'] = (string) $prxml->studentAns;
+                $pr['testoptions'] = (string) $prxml->testoptions;
+                $pr['quiet'] = (string) $prxml->quietAnsTest;
+                foreach (array('true', 'false') as $branchname) {
+                    $branch = $this->getnextPR($branchname, $prxml);
+                    foreach($branch as $key => $val) {
+                        $pr[$branchname.$key] = $val;
+                    }
+                }
+        
+                $potentialresponses[$id] = $pr;
             }
-            $prt['PotentialResponses'] = $PotentialResponses;
 
-            $PotentialResponseTrees[] = $prt;
+            foreach($potentialresponses as $prname => $pr) {
+                foreach($pr as $key => $val) {
+                    $prt[$key][$prname] = $val;
+                }
+            }
+            $potentialresponsetrees[$name] = $prt;
         }
-        $question['PotentialResponseTrees'] = $PotentialResponseTrees;
 
-        $ItemOptions = array();
-        foreach ($assessmentItem->ItemOptions->stackoption as $stackoptionXML) {
-            $name = (string) $stackoptionXML->name;
-            $value = (string) $stackoptionXML->selected;
-            $ItemOptions[$name] = $value;
+        $prtnames = array();
+        foreach($potentialresponsetrees as $name => $prt) {
+            // STACK can't cope with PRT names which are only a number.  So append "prt".
+            $newname = $name;
+            //if ("$name looks like an integer!") {
+            //    $newname = 'pr'.$name;
+            //}
+            
+            $prtnames[$name] = $newname;
+            foreach($prt as $key=>$val) {
+                $question->{$newname.$key} = $val;
+            }
         }
-        $question['ItemOptions'] = $ItemOptions;
+        // Change the input tags for the new versions.
+        // Single PRT questions are treated as a special case
+        // TODO - this breaks STACK!
+//        if (1==count($prtnames)) {
+//            $name = array_pop($prtnames);
+//            $question->questiontext = str_replace('<PRTfeedback>'.$name.'</PRTfeedback>', '', $question->questiontext);
+//            $question->specificfeedback = array('text' => "<p>[[feedback:$name]]</p>", 'format' => FORMAT_HTML, 'files' => array());
+//        } else {
+            foreach ($prtnames as $oldname => $newname) {
+                $question->questiontext = str_replace('<PRTfeedback>'.$name.'</PRTfeedback>', "[[feedback:$newname]]", $question->questiontext);
+            }
+//        }
 
-        $ItemTests = array();
-        if ($assessmentItem->ItemTests) {
-            foreach ($assessmentItem->ItemTests->test as $testXML) {
+        /*********************************************************************/
+        // Question tests
+/*
+        $itemtests = array();
+        if ($assessmentitem->ItemTests) {
+            foreach ($assessmentitem->ItemTests->test as $testXML) {
                 $col1 = array(
                     'key' => (string) $testXML->col[0]->key,
                     'value' => (string) $testXML->col[0]->value,
@@ -212,11 +305,10 @@ class qformat_stack extends qformat_default {
                     'value' => (string) $testXML->col[1]->value
                 );
                 $test = array($col1, $col2);
-                $ItemTests[] = $test;
+                $itemtests[] = $test;
             }
         }
-        $question['ItemTests'] = $ItemTests;
-
+*/
         return $question;
     }
 
@@ -254,5 +346,35 @@ class qformat_stack extends qformat_default {
 
         $strout = trim($strout);
         return $strout;
+    }
+
+    /**
+     * Convert Boolean values into 1 & 0.
+     * @param  string string.
+     * @return string converted boolean value.
+     */
+    public function convert_bools($strin) {
+        $val = $strin;
+        if ('true' == $strin) {
+            $val = 1;
+        }
+        if ('false' == $strin) {
+            $val = 0;
+        }
+        return $val;
+    }
+
+    /**
+    * Replace STACK 2 tags in the question text with new ones.
+    * @param  string incoming question text
+    * @param  array input names
+    * @return string converted raw keyvals.
+    */
+    public function convert_questiontext($questiontext, $inputnames) {
+        foreach ($inputnames as $name) {
+            $questiontext = str_replace('#'.$name.'#', "[[input:$name]]", $questiontext);
+            $questiontext = str_replace('<IEfeedback>'.$name.'</IEfeedback>', "[[validation:$name]]", $questiontext);
+        }
+        return $questiontext;
     }
 }
