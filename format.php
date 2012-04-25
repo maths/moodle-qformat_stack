@@ -24,6 +24,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+require_once($CFG->dirroot . '/question/type/stack/questiontype.php');
+
 /**
  * This question importer class will import the Stack 2.0 XML format.
  *
@@ -267,10 +269,7 @@ class qformat_stack extends qformat_default {
         $prtnames = array();
         foreach($potentialresponsetrees as $name => $prt) {
             // STACK 3 (moodle forms?) can't cope with PRT names which are only a number.  So append "prt".
-            $newname = $name;
-            if (is_numeric($name)) {
-                $newname = 'prt'.$name;
-            }
+            $newname = $this->convert_prt_name($name);
             $prtnames[$name] = $newname;
             foreach($prt as $key=>$val) {
                 $question->{$newname.$key} = $val;
@@ -291,22 +290,34 @@ class qformat_stack extends qformat_default {
 
         /*********************************************************************/
         // Question tests
-/*
         $itemtests = array();
         if ($assessmentitem->ItemTests) {
-            foreach ($assessmentitem->ItemTests->test as $testXML) {
-                $col1 = array(
-                    'key' => (string) $testXML->col[0]->key,
-                    'value' => (string) $testXML->col[0]->value,
-                );
-                $col2 = array(
-                    'key' => (string) $testXML->col[1]->key,
-                    'value' => (string) $testXML->col[1]->value
-                );
-                $test = array($col1, $col2);
-                $itemtests[] = $test;
+            foreach ($assessmentitem->ItemTests->test as $testxml) {
+                $inputs = array();
+                $prts   = array();
+                foreach($testxml->children() as $col) {
+                    $key = (string) $col->key;
+                    $val = (string) $col->value;
+                    if ('IE_' == substr($key, 0, 3)) {
+                        $inputs[substr($key, 3)] = $val;
+                    }
+                    if ('PRT_' == substr($key, 0, 4)) {
+                        // Knock off PR_PotResTree_
+                        $prts[$this->convert_prt_name(substr($key, 15))] = $val;
+                    }
+                }
+                $qtest = new stack_question_test($inputs);
+                foreach ($prts as $key => $val) {
+                    $qtest->add_expected_result($key, new stack_potentialresponse_tree_state(
+                                                            '', array(), array($val), true, 1, 0));
+                }
+                $question->testcases[] = $qtest;
             }
         }
+/*
+        echo "<pre>";
+        print_r($question);
+        echo "</pre>";
 */
         return $question;
     }
@@ -375,5 +386,17 @@ class qformat_stack extends qformat_default {
             $questiontext = str_replace('<IEfeedback>'.$name.'</IEfeedback>', "[[validation:$name]]", $questiontext);
         }
         return $questiontext;
+    }
+
+    /**
+    * Names for PRTs cannot now be just numbers,
+    * @param  string incoming name
+    * @return string converted name.
+    */
+    public function convert_prt_name($name) {
+            if (is_numeric($name)) {
+                $name = 'prt'.$name;
+            }
+        return $name;
     }
 }
