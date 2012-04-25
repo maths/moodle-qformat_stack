@@ -266,12 +266,11 @@ class qformat_stack extends qformat_default {
 
         $prtnames = array();
         foreach($potentialresponsetrees as $name => $prt) {
-            // STACK can't cope with PRT names which are only a number.  So append "prt".
+            // STACK 3 (moodle forms?) can't cope with PRT names which are only a number.  So append "prt".
             $newname = $name;
-            //if ("$name looks like an integer!") {
-            //    $newname = 'pr'.$name;
-            //}
-            
+            if (is_numeric($name)) {
+                $newname = 'prt'.$name;
+            }
             $prtnames[$name] = $newname;
             foreach($prt as $key=>$val) {
                 $question->{$newname.$key} = $val;
@@ -286,7 +285,7 @@ class qformat_stack extends qformat_default {
 //            $question->specificfeedback = array('text' => "<p>[[feedback:$name]]</p>", 'format' => FORMAT_HTML, 'files' => array());
 //        } else {
             foreach ($prtnames as $oldname => $newname) {
-                $question->questiontext = str_replace('<PRTfeedback>'.$name.'</PRTfeedback>', "[[feedback:$newname]]", $question->questiontext);
+                $question->questiontext = str_replace('<PRTfeedback>'.$oldname.'</PRTfeedback>', "[[feedback:$newname]]", $question->questiontext);
             }
 //        }
 
