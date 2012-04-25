@@ -278,16 +278,16 @@ class qformat_stack extends qformat_default {
         }
         // Change the input tags for the new versions.
         // Single PRT questions are treated as a special case
-        // TODO - this breaks STACK!
-//        if (1==count($prtnames)) {
-//            $name = array_pop($prtnames);
-//            $question->questiontext = str_replace('<PRTfeedback>'.$name.'</PRTfeedback>', '', $question->questiontext);
-//            $question->specificfeedback = array('text' => "<p>[[feedback:$name]]</p>", 'format' => FORMAT_HTML, 'files' => array());
-//        } else {
+        if (1==count($prtnames)) {
+            foreach ($prtnames as $oldname => $newname) {
+                $question->questiontext = str_replace('<PRTfeedback>'.$oldname.'</PRTfeedback>', '', $question->questiontext);
+                $question->specificfeedback = array('text' => "<p>[[feedback:$newname]]</p>", 'format' => FORMAT_HTML, 'files' => array());
+            }
+        } else {
             foreach ($prtnames as $oldname => $newname) {
                 $question->questiontext = str_replace('<PRTfeedback>'.$oldname.'</PRTfeedback>', "[[feedback:$newname]]", $question->questiontext);
             }
-//        }
+        }
 
         /*********************************************************************/
         // Question tests
