@@ -296,6 +296,7 @@ class qformat_stack extends qformat_default {
         // Question tests
         $itemtests = array();
         if ($assessmentitem->ItemTests) {
+            $question->testcases[0] = null;
             foreach ($assessmentitem->ItemTests->test as $testxml) {
                 $inputs = array();
                 $prts   = array();
@@ -307,6 +308,9 @@ class qformat_stack extends qformat_default {
                     }
                     if ('PRT_' == substr($key, 0, 4)) {
                         // Knock off PR_PotResTree_
+                        if ('NONE' == $val) {
+                            $val = 'NULL';
+                        }
                         $prts[$this->convert_prt_name(substr($key, 15))] = $val;
                     }
                 }
@@ -317,6 +321,7 @@ class qformat_stack extends qformat_default {
                 }
                 $question->testcases[] = $qtest;
             }
+            unset ($question->testcases[0]);
         }
 /*
         echo "<pre>";
