@@ -110,6 +110,9 @@ class qformat_stack extends qformat_default {
         $node = $prxml->$tf;
 
         $result['scoremode'] = (string) $node->rawModMark;
+        if ('+AT' == $result['scoremode']) {
+            $result['scoremode'] = '=';
+        }
         $result['score'] = (string) $node->rawMark;
         $result['penalty'] = (string) $node->penalty;
         $result['feedback'] = array('text' => (string) $node->feedback, 'format' => FORMAT_HTML, 'files' => array());
@@ -237,6 +240,7 @@ class qformat_stack extends qformat_default {
         
             $potentialresponses = array();
             foreach ($prtXML->PotentialResponses->PR as $prxml) {
+
                 $id = (string) $prxml['id'];
 
                 $pr = array();
