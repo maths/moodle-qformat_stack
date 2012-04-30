@@ -165,8 +165,8 @@ class qformat_stack extends qformat_default {
         $question->complexno             = $itemoptions['ComplexNo'];
         $question->markmode              = $itemoptions['MarkModMethod'];
         $question->prtcorrect            = array('text' => $itemoptions['FeedbackGenericCorrect'], 'format' => FORMAT_HTML, 'files' => array());;
-        $question->prtpartiallycorrect   = array('text' => $itemoptions['FeedbackGenericIncorrect'], 'format' => FORMAT_HTML, 'files' => array());;
-        $question->prtincorrect          = array('text' => $itemoptions['FeedbackGenericPCorrect'], 'format' => FORMAT_HTML, 'files' => array());;
+        $question->prtpartiallycorrect   = array('text' => $itemoptions['FeedbackGenericPCorrect'], 'format' => FORMAT_HTML, 'files' => array());;
+        $question->prtincorrect          = array('text' => $itemoptions['FeedbackGenericIncorrect'], 'format' => FORMAT_HTML, 'files' => array());;
 
         /*********************************************************************/
         // Input elements
