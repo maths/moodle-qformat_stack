@@ -160,6 +160,9 @@ class qformat_stack extends qformat_default {
         // Not all the STACK 2 options are used.  Some are thrown away.
         $question->questionsimplify      = $itemoptions['Simplify'];
         $question->assumepositive        = $itemoptions['AssumePos'];
+        if ('(none)' == $itemoptions['MultiplicationSign']) {
+            $itemoptions['MultiplicationSign'] = 'none';
+        }
         $question->multiplicationsign    = $itemoptions['MultiplicationSign'];
         $question->sqrtsign              = $itemoptions['SqrtSign'];
         $question->complexno             = $itemoptions['ComplexNo'];
