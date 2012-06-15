@@ -110,7 +110,7 @@ class qformat_stack extends qformat_default {
         $node = $prxml->$tf;
 
         $result['scoremode'] = (string) $node->rawModMark;
-        if ('+AT' == $result['scoremode']) {
+        if ('+AT' == $result['scoremode'] || '=AT' == $result['scoremode']) {
             $result['scoremode'] = '=';
         }
         $result['score'] = (string) $node->rawMark;
