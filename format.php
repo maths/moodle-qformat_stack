@@ -159,6 +159,13 @@ class qformat_stack extends qformat_default {
         }
         // Not all the STACK 2 options are used.  Some are thrown away.
         $question->questionsimplify      = $itemoptions['Simplify'];
+        // Bug in STACK 2 exporter: Penalty is not written....
+        if (array_key_exists('Penalty', $itemoptions)) {
+        	$question->penalty           = $itemoptions['Penalty'];
+        } else {
+        	$question->penalty           = 0.1;
+        }
+                
         $question->assumepositive        = $itemoptions['AssumePos'];
         if ('(none)' == $itemoptions['MultiplicationSign']) {
             $itemoptions['MultiplicationSign'] = 'none';
@@ -166,7 +173,6 @@ class qformat_stack extends qformat_default {
         $question->multiplicationsign    = $itemoptions['MultiplicationSign'];
         $question->sqrtsign              = $itemoptions['SqrtSign'];
         $question->complexno             = $itemoptions['ComplexNo'];
-        $question->markmode              = $itemoptions['MarkModMethod'];
         $question->prtcorrect            = array('text' => $itemoptions['FeedbackGenericCorrect'], 'format' => FORMAT_HTML, 'files' => array());;
         $question->prtpartiallycorrect   = array('text' => $itemoptions['FeedbackGenericPCorrect'], 'format' => FORMAT_HTML, 'files' => array());;
         $question->prtincorrect          = array('text' => $itemoptions['FeedbackGenericIncorrect'], 'format' => FORMAT_HTML, 'files' => array());;
@@ -248,8 +254,8 @@ class qformat_stack extends qformat_default {
 
                 $pr = array();
                 $pr['answertest'] = (string) $prxml->answerTest;
-                if ('Equal_Com_Ass' == $pr['answertest']) {
-                    $PR['answertest'] = 'EqualComAss';
+                if ('Equal_Com_Ass' == trim($pr['answertest'])) {
+                    $pr['answertest'] = 'EqualComAss';
                 }
                 $pr['tans'] = (string) $prxml->teachersAns;
                 $pr['sans'] = (string) $prxml->studentAns;
