@@ -184,7 +184,7 @@ class qformat_stack extends qformat_default {
                     'True/False'       => 'boolean',
                     'Textarea'         => 'textarea',
                     'Single Character' => 'singlechar',
-                    //'Matrix'           => '?',
+                    'Matrix'           => 'matrix',
                     //'List'             => '?',
                     //'DropDownList'     => '?',
         );
