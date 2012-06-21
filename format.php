@@ -207,7 +207,7 @@ class qformat_stack extends qformat_default {
                 $inputoptions[$name] = $value;
             }
 
-            $questionpart['tans']               = (string) $questionpartXML->teachersAns->casString;
+            $questionpart['modelans']               = (string) $questionpartXML->teachersAns->casString;
             $questionpart['boxsize']            = (string) $questionpartXML->boxsize;
             $questionpart['insertstars']        = $inputoptions['insertStars'];
             $questionpart['syntaxhint']         = (string) $questionpartXML->syntax;
