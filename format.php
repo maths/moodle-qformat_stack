@@ -187,6 +187,8 @@ class qformat_stack extends qformat_default {
                     'Matrix'           => 'matrix',
                     //'List'             => '?',
                     //'DropDownList'     => '?',
+                    //'Slider'           => '?',
+                    //'Dragmath'         => '?',
         );
 
         $questionparts = array();
