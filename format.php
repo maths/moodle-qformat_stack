@@ -210,6 +210,11 @@ class qformat_stack extends qformat_default {
             }
 
             $questionpart['modelans']               = (string) $questionpartXML->teachersAns->casString;
+            if (strlen($questionpart['modelans'])>255) {
+                $question->questionvariables .= "\n/*Automatically added by the importer*/";
+                $question->questionvariables .= "\nlonganswer".$name.':'.$questionpart['modelans']."\n";
+                $questionpart['modelans'] = 'longanswer'.$name;
+            }
             $questionpart['boxsize']            = (string) $questionpartXML->boxsize;
             $questionpart['insertstars']        = $inputoptions['insertStars'];
             $questionpart['syntaxhint']         = (string) $questionpartXML->syntax;
@@ -250,6 +255,7 @@ class qformat_stack extends qformat_default {
             $prt['feedbackvariables'] = $this->convert_keyvals((string) $prtXML->feedbackVariables);
         
             $potentialresponses = array();
+            $autonumber = 0;
             foreach ($prtXML->PotentialResponses->PR as $prxml) {
 
                 $id = (string) $prxml['id'];
@@ -260,8 +266,26 @@ class qformat_stack extends qformat_default {
                     $pr['answertest'] = 'EqualComAss';
                 }
                 $pr['tans'] = (string) $prxml->teachersAns;
+                if (strlen($pr['tans'])>255) {
+                    $prt['feedbackvariables']  .= "\n/*Automatically added by the importer*/";
+                    $prt['feedbackvariables']  .= "\nlongexpr".$autonumber.':'.$pr['tans']."\n";
+                    $autonumber +=1;
+                    $pr['tans'] = 'longexpr'.$autonumber;
+                }
                 $pr['sans'] = (string) $prxml->studentAns;
+                if (strlen($pr['sans'])>255) {
+                    $prt['feedbackvariables']  .= "\n/*Automatically added by the importer*/";
+                    $prt['feedbackvariables']  .= "\nlongexpr".$autonumber.':'.$pr['sans']."\n";
+                    $autonumber +=1;
+                    $pr['sans'] = 'longexpr'.$autonumber;
+                }
                 $pr['testoptions'] = (string) $prxml->testoptions;
+                if (strlen($pr['testoptions'])>255) {
+                    $prt['feedbackvariables']  .= "\n/*Automatically added by the importer*/";
+                    $prt['feedbackvariables']  .= "\nlongexpr".$autonumber.':'.$pr['testoptions']."\n";
+                    $autonumber +=1;
+                    $pr['testoptions'] = 'longexpr'.$autonumber;
+                }
                 $pr['quiet'] = (string) $prxml->quietAnsTest;
                 foreach (array('true', 'false') as $branchname) {
                     $branch = $this->getnextPR($branchname, $prxml);
