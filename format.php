@@ -208,7 +208,7 @@ class qformat_stack extends qformat_default {
             }
 
             $questionpart['modelans']               = (string) $questionpartXML->teachersAns->casString;
-            if (strlen($questionpart['modelans'])>254) {
+            if (strlen($questionpart['modelans'])>255) {
                 $question->questionvariables .= "\n/*Automatically added by the importer*/";
                 $question->questionvariables .= "\nlonganswer".$name.':'.$questionpart['modelans']."\n";
                 $questionpart['modelans'] = 'longanswer'.$name;
@@ -264,21 +264,21 @@ class qformat_stack extends qformat_default {
                     $pr['answertest'] = 'EqualComAss';
                 }
                 $pr['tans'] = (string) $prxml->teachersAns;
-                if (strlen($pr['tans'])>64) {
+                if (strlen($pr['tans'])>255) {
                     $prt['feedbackvariables']  .= "\n/*Automatically added by the importer*/";
                     $prt['feedbackvariables']  .= "\nlongexpr".$autonumber.':'.$pr['tans']."\n";
                     $autonumber +=1;
                     $pr['tans'] = 'longexpr'.$autonumber;
                 }
                 $pr['sans'] = (string) $prxml->studentAns;
-                if (strlen($pr['sans'])>64) {
+                if (strlen($pr['sans'])>255) {
                     $prt['feedbackvariables']  .= "\n/*Automatically added by the importer*/";
                     $prt['feedbackvariables']  .= "\nlongexpr".$autonumber.':'.$pr['sans']."\n";
                     $autonumber +=1;
                     $pr['sans'] = 'longexpr'.$autonumber;
                 }
                 $pr['testoptions'] = (string) $prxml->testoptions;
-                if (strlen($pr['testoptions'])>64) {
+                if (strlen($pr['testoptions'])>255) {
                     $prt['feedbackvariables']  .= "\n/*Automatically added by the importer*/";
                     $prt['feedbackvariables']  .= "\nlongexpr".$autonumber.':'.$pr['testoptions']."\n";
                     $autonumber +=1;
