@@ -147,7 +147,13 @@ class qformat_stack extends qformat_default {
         $question->generalfeedbackformat = FORMAT_HTML;
 
         $question->questionvariables     = $this->convert_keyvals((string) $assessmentitem->questionCasValues->questionVariables->rawKeyVals);
-        $question->questionnote          = (string) $assessmentitem->questionCasValues->questionNote->castext;
+        $newnote = (string) $assessmentitem->questionCasValues->questionNote->castext;
+        if (strlen($newnote)>255) {
+            $question->questiontext .= "Question note too long on import:\n\n".$newnote;
+            $question->questionnote  = "ERROR on import: question note too long.  See question text.";
+        } else {
+            $question->questionnote = $newnote;
+        }
 
         /*********************************************************************/
         // Question level options
