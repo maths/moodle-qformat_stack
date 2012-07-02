@@ -358,7 +358,7 @@ class qformat_stack extends qformat_default {
                 $qtest = new stack_question_test($inputs);
                 foreach ($prts as $key => $val) {
                     $qtest->add_expected_result($key, new stack_potentialresponse_tree_state(
-                                                            '', array(), array($val), true, 1, 0));
+                                                            '', array(), array($val), true, 0, 0.1));
                 }
                 $question->testcases[] = $qtest;
             }
