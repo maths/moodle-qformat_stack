@@ -25,10 +25,10 @@
 defined('MOODLE_INTERNAL') || die();
 
 
-$plugin->version   = 2011102700;
-$plugin->requires  = 2011102700;
+$plugin->version   = 2012070300;
+$plugin->requires  = 2012061800.00;
 $plugin->cron = 0;
 $plugin->component = 'qformat_stack';
 $plugin->maturity  = MATURITY_ALPHA;
 
-$plugin->dependencies = array('qtype_stack' => 2012062101);
+$plugin->dependencies = array('qtype_stack' => 2012070300);

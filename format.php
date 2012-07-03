@@ -45,14 +45,7 @@ class qformat_stack extends qformat_default {
     }
 
     public function readquestions($lines) {
-
         $data = $this->questionstoformfrom(implode($lines));
-
-        //echo "<pre>";
-        //print_r($data);
-        //echo "</pre>";
-
-        //return null;
         return $data;
     }
 
@@ -69,7 +62,7 @@ class qformat_stack extends qformat_default {
     }
 
     public function readquestion($lines) {
-        //this is no longer needed but might still be called by default.php
+        // This is no longer needed but might still be called by default.php.
         return;
     }
 
@@ -80,10 +73,10 @@ class qformat_stack extends qformat_default {
      */
     protected function questionstoformfrom($xmlstr) {
 
-        // Slight hack, since SimpleXMLElement does not like these names....
+        // Slight hack, since SimpleXMLElement does not like these names...
         $xmlstr = str_replace('<dc:', '<dc', $xmlstr);
         $xmlstr = str_replace('</dc:', '</dc', $xmlstr);
-        
+
         $root = new SimpleXMLElement($xmlstr);
         $result = array();
 
@@ -104,7 +97,7 @@ class qformat_stack extends qformat_default {
      * @param SimpleXMLElement $prxml potential response element
      * @return subelements as an array
      */
-     protected function getnextpr($tf, $prxml) {
+    protected function getnextpr($tf, $prxml) {
         $result = array();
 
         $node = $prxml->$tf;
@@ -136,9 +129,8 @@ class qformat_stack extends qformat_default {
         $question->variantsselectionseed = '';
         $question->defaultmark           = 1;
         $question->length                = 1;
-        //$question->penalty               = 0;
 
-        // Note, new tags for [[input:ans1]] and validation are converted below, after inputs
+        // Note, new tags for [[input:ans1]] and validation are converted below, after inputs.
         $question->questiontext          = (string) $assessmentitem->questionCasValues->questionStem->castext;
         $question->questiontextformat    = FORMAT_HTML;
         // Always blank on import - we assume PRT feedback is embedded in the question.
@@ -146,7 +138,8 @@ class qformat_stack extends qformat_default {
         $question->generalfeedback       = (string) $assessmentitem->questionCasValues->workedSolution->castext;
         $question->generalfeedbackformat = FORMAT_HTML;
 
-        $question->questionvariables     = $this->convert_keyvals((string) $assessmentitem->questionCasValues->questionVariables->rawKeyVals);
+        $question->questionvariables     = $this->convert_keyvals((string)
+                                                $assessmentitem->questionCasValues->questionVariables->rawKeyVals);
         $newnote = (string) $assessmentitem->questionCasValues->questionNote->castext;
         if (strlen($newnote)>255) {
             $question->questiontext .= "Question note too long on import:\n\n".$newnote;
@@ -155,23 +148,22 @@ class qformat_stack extends qformat_default {
             $question->questionnote = $newnote;
         }
 
-        /*********************************************************************/
-        // Question level options
+        // Question level options.
         $itemoptions = array();
-        foreach ($assessmentitem->ItemOptions->stackoption as $stackoptionXML) {
-            $name = (string) $stackoptionXML->name;
-            $value = $this->convert_bools((string) $stackoptionXML->selected);
+        foreach ($assessmentitem->ItemOptions->stackoption as $stackoptionxml) {
+            $name = (string) $stackoptionxml->name;
+            $value = $this->convert_bools((string) $stackoptionxml->selected);
             $itemoptions[$name] = $value;
         }
         // Not all the STACK 2 options are used.  Some are thrown away.
         $question->questionsimplify      = $itemoptions['Simplify'];
-        // Bug in STACK 2 exporter: Penalty is not written....
+        // Bug in STACK 2 exporter: Penalty is not written...
         if (array_key_exists('Penalty', $itemoptions)) {
-        	$question->penalty           = $itemoptions['Penalty'];
+            $question->penalty           = $itemoptions['Penalty'];
         } else {
-        	$question->penalty           = 0.1;
+            $question->penalty           = 0.1;
         }
-                
+
         $question->assumepositive        = $itemoptions['AssumePos'];
         if ('(none)' == $itemoptions['MultiplicationSign']) {
             $itemoptions['MultiplicationSign'] = 'none';
@@ -179,52 +171,57 @@ class qformat_stack extends qformat_default {
         $question->multiplicationsign    = $itemoptions['MultiplicationSign'];
         $question->sqrtsign              = $itemoptions['SqrtSign'];
         $question->complexno             = $itemoptions['ComplexNo'];
-        $question->prtcorrect            = array('text' => $itemoptions['FeedbackGenericCorrect'], 'format' => FORMAT_HTML, 'files' => array());;
-        $question->prtpartiallycorrect   = array('text' => $itemoptions['FeedbackGenericPCorrect'], 'format' => FORMAT_HTML, 'files' => array());;
-        $question->prtincorrect          = array('text' => $itemoptions['FeedbackGenericIncorrect'], 'format' => FORMAT_HTML, 'files' => array());;
+        $question->prtcorrect            = array('text' => $itemoptions['FeedbackGenericCorrect'],
+                                                                'format' => FORMAT_HTML, 'files' => array());
+        $question->prtpartiallycorrect   = array('text' => $itemoptions['FeedbackGenericPCorrect'],
+                                                                'format' => FORMAT_HTML, 'files' => array());;
+        $question->prtincorrect          = array('text' => $itemoptions['FeedbackGenericIncorrect'],
+                                                                'format' => FORMAT_HTML, 'files' => array());;
 
-        /*********************************************************************/
-        // Input elements
+        // Input elements.
         $inputtypemapping = array(
                     'Algebraic Input'  => 'algebraic',
                     'True/False'       => 'boolean',
                     'Textarea'         => 'textarea',
                     'Single Character' => 'singlechar',
                     'Matrix'           => 'matrix',
-                    //'List'             => '?',
-                    //'DropDownList'     => '?',
-                    //'Slider'           => '?',
-                    //'Dragmath'         => '?',
+                    // TODO 'List'             => '?',
+                    // TODO 'DropDownList'     => '?',
+                    // TODO 'Slider'           => '?',
+                    // TODO 'Dragmath'         => '?',
+                    // Add these back once these input elements exist.
         );
 
         $questionparts = array();
-        foreach ($assessmentitem->questionparts->questionpart as $questionpartXML) {
+        foreach ($assessmentitem->questionparts->questionpart as $questionpartxml) {
             $questionpart = array();
 
-            $inputtype = (string) $questionpartXML->inputType->selection;
+            $inputtype = (string) $questionpartxml->inputType->selection;
             if (array_key_exists($inputtype, $inputtypemapping)) {
                 $questionpart['type'] = $inputtypemapping[$inputtype];
             } else {
-                throw new Exception('STACK 2 importer tried to set an input type named '.$inputtype.' for input '.$questionpart['studentanskey'].'.  This has not yet been implemented in STACK 3.');
+                throw new Exception('STACK 2 importer tried to set an input type named ' .
+                        $inputtype.' for input ' . $questionpart['studentanskey'] .
+                        '.  This has not yet been implemented in STACK 3.');
             }
 
             $inputoptions = array();
-            foreach ($questionpartXML->stackoption as $stackoptionXML) {
-                $name = (string) $stackoptionXML->name;
-                $value = $this->convert_bools((string) $stackoptionXML->selected);
+            foreach ($questionpartxml->stackoption as $stackoptionxml) {
+                $name = (string) $stackoptionxml->name;
+                $value = $this->convert_bools((string) $stackoptionxml->selected);
                 $inputoptions[$name] = $value;
             }
 
-            $questionpart['modelans']               = (string) $questionpartXML->teachersAns->casString;
+            $questionpart['modelans']               = (string) $questionpartxml->teachersAns->casString;
             if (strlen($questionpart['modelans'])>255) {
                 $question->questionvariables .= "\n/*Automatically added by the importer*/";
                 $question->questionvariables .= "\nlonganswer".$name.':'.$questionpart['modelans']."\n";
                 $questionpart['modelans'] = 'longanswer'.$name;
             }
-            $questionpart['boxsize']            = (string) $questionpartXML->boxsize;
+            $questionpart['boxsize']            = (string) $questionpartxml->boxsize;
             $questionpart['insertstars']        = $inputoptions['insertStars'];
-            $questionpart['syntaxhint']         = (string) $questionpartXML->syntax;
-            $questionpart['forbidwords']        = (string) $questionpartXML->forbiddenWords->Forbid;
+            $questionpart['syntaxhint']         = (string) $questionpartxml->syntax;
+            $questionpart['forbidwords']        = (string) $questionpartxml->forbiddenWords->Forbid;
             $questionpart['forbidfloat']        = $inputoptions['forbidFloats'];
             $questionpart['requirelowestterms'] = $inputoptions['lowestTerms'];
             $questionpart['checkanswertype']    = $inputoptions['sameType'];
@@ -233,7 +230,7 @@ class qformat_stack extends qformat_default {
             $questionpart['mustverify']         = 1;
             $questionpart['showvalidation']     = 1;
 
-            $name = (string) $questionpartXML->name;
+            $name = (string) $questionpartxml->name;
             $questionparts[$name] = $questionpart;
         }
         $inputnames = array();
@@ -247,22 +244,21 @@ class qformat_stack extends qformat_default {
         // Change the input tags for the new versions.
         $question->questiontext = $this->convert_questiontext($question->questiontext, $inputnames);
 
-        /*********************************************************************/
-        // Potential response trees
+        // Potential response trees.
         $potentialresponsetrees = array();
-        foreach ($assessmentitem->PotentialResponseTrees->PotentialResponseTree as $prtXML) {
-            $name = (string) $prtXML->prtname;
+        foreach ($assessmentitem->PotentialResponseTrees->PotentialResponseTree as $prtxml) {
+            $name = (string) $prtxml->prtname;
             // STACK adds this for export purposes, because it can't cope with PRTs which are just a number.
             $name = str_replace('PotResTree_', '', $name);
 
             $prt = array();
-            $prt['value'] = (int) $prtXML->questionValue;
-            $prt['autosimplify'] = $this->convert_bools((string) $prtXML->autoSimplify);
-            $prt['feedbackvariables'] = $this->convert_keyvals((string) $prtXML->feedbackVariables);
-        
+            $prt['value'] = (int) $prtxml->questionValue;
+            $prt['autosimplify'] = $this->convert_bools((string) $prtxml->autoSimplify);
+            $prt['feedbackvariables'] = $this->convert_keyvals((string) $prtxml->feedbackVariables);
+
             $potentialresponses = array();
             $autonumber = 0;
-            foreach ($prtXML->PotentialResponses->PR as $prxml) {
+            foreach ($prtxml->PotentialResponses->PR as $prxml) {
 
                 $id = (string) $prxml['id'];
 
@@ -295,16 +291,16 @@ class qformat_stack extends qformat_default {
                 $pr['quiet'] = (string) $prxml->quietAnsTest;
                 foreach (array('true', 'false') as $branchname) {
                     $branch = $this->getnextPR($branchname, $prxml);
-                    foreach($branch as $key => $val) {
-                        $pr[$branchname.$key] = $val;
+                    foreach ($branch as $key => $val) {
+                        $pr[$branchname . $key] = $val;
                     }
                 }
-        
+
                 $potentialresponses[$id] = $pr;
             }
 
-            foreach($potentialresponses as $prname => $pr) {
-                foreach($pr as $key => $val) {
+            foreach ($potentialresponses as $prname => $pr) {
+                foreach ($pr as $key => $val) {
                     $prt[$key][$prname] = $val;
                 }
             }
@@ -312,43 +308,45 @@ class qformat_stack extends qformat_default {
         }
 
         $prtnames = array();
-        foreach($potentialresponsetrees as $name => $prt) {
-            // STACK 3 (moodle forms?) can't cope with PRT names which are only a number.  So append "prt".
+        foreach ($potentialresponsetrees as $name => $prt) {
+            // STACK 3 (moodle forms?) can't cope with PRT names which are only a number.  So prepend "prt".
             $newname = $this->convert_prt_name($name);
             $prtnames[$name] = $newname;
-            foreach($prt as $key=>$val) {
-                $question->{$newname.$key} = $val;
+            foreach ($prt as $key => $val) {
+                $question->{$newname . $key} = $val;
             }
         }
         // Change the input tags for the new versions.
-        // Single PRT questions are treated as a special case
-        if (1==count($prtnames)) {
+        // Single PRT questions are treated as a special case.
+        if (1 == count($prtnames)) {
             foreach ($prtnames as $oldname => $newname) {
-                $question->questiontext = str_replace('<PRTfeedback>'.$oldname.'</PRTfeedback>', '', $question->questiontext);
-                $question->specificfeedback = array('text' => "<p>[[feedback:$newname]]</p>", 'format' => FORMAT_HTML, 'files' => array());
+                $question->questiontext = str_replace('<PRTfeedback>'.$oldname.'</PRTfeedback>', '',
+                                                        $question->questiontext);
+                $question->specificfeedback = array('text' => "<p>[[feedback:$newname]]</p>",
+                                                        'format' => FORMAT_HTML, 'files' => array());
             }
         } else {
             foreach ($prtnames as $oldname => $newname) {
-                $question->questiontext = str_replace('<PRTfeedback>'.$oldname.'</PRTfeedback>', "[[feedback:$newname]]", $question->questiontext);
+                $question->questiontext = str_replace('<PRTfeedback>'.$oldname.'</PRTfeedback>', "[[feedback:$newname]]",
+                                                        $question->questiontext);
             }
         }
 
-        /*********************************************************************/
-        // Question tests
+        // Question tests.
         $itemtests = array();
         if ($assessmentitem->ItemTests) {
             $question->testcases[0] = null;
             foreach ($assessmentitem->ItemTests->test as $testxml) {
                 $inputs = array();
                 $prts   = array();
-                foreach($testxml->children() as $col) {
+                foreach ($testxml->children() as $col) {
                     $key = (string) $col->key;
                     $val = (string) $col->value;
                     if ('IE_' == substr($key, 0, 3)) {
                         $inputs[substr($key, 3)] = $val;
                     }
                     if ('PRT_' == substr($key, 0, 4)) {
-                        // Knock off PR_PotResTree_
+                        // Knock off PR_PotResTree_.
                         if ('NONE' == $val) {
                             $val = 'NULL';
                         }
@@ -358,17 +356,13 @@ class qformat_stack extends qformat_default {
                 $qtest = new stack_question_test($inputs);
                 foreach ($prts as $key => $val) {
                     $qtest->add_expected_result($key, new stack_potentialresponse_tree_state(
-                                                            '', array(), array($val), true, 0, 0.1));
+                                                            1, true, 0, 0.1, '', array($val)));
                 }
                 $question->testcases[] = $qtest;
             }
             unset ($question->testcases[0]);
         }
-/*
-        echo "<pre>";
-        print_r($question);
-        echo "</pre>";
-*/
+
         return $question;
     }
 
@@ -425,11 +419,11 @@ class qformat_stack extends qformat_default {
     }
 
     /**
-    * Replace STACK 2 tags in the question text with new ones.
-    * @param  string incoming question text
-    * @param  array input names
-    * @return string converted raw keyvals.
-    */
+     * Replace STACK 2 tags in the question text with new ones.
+     * @param  string incoming question text
+     * @param  array input names
+     * @return string converted raw keyvals.
+     */
     public function convert_questiontext($questiontext, $inputnames) {
         foreach ($inputnames as $name) {
             $questiontext = str_replace('#'.$name.'#', "[[input:$name]]", $questiontext);
@@ -439,14 +433,14 @@ class qformat_stack extends qformat_default {
     }
 
     /**
-    * Names for PRTs cannot now be just numbers,
-    * @param  string incoming name
-    * @return string converted name.
-    */
+     * Names for PRTs cannot now be just numbers,
+     * @param  string incoming name
+     * @return string converted name.
+     */
     public function convert_prt_name($name) {
-            if (is_numeric($name)) {
-                $name = 'prt'.$name;
-            }
+        if (is_numeric($name)) {
+            $name = 'prt' . $name;
+        }
         return $name;
     }
 }
