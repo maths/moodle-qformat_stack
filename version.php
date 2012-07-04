@@ -26,7 +26,7 @@ defined('MOODLE_INTERNAL') || die();
 
 
 $plugin->version   = 2012070300;
-$plugin->requires  = 2012061800.00;
+$plugin->requires  = 2012062500;
 $plugin->cron = 0;
 $plugin->component = 'qformat_stack';
 $plugin->maturity  = MATURITY_BETA;
