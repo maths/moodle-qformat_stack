@@ -79,15 +79,23 @@ class qformat_stack extends qformat_default {
 
         $root = new SimpleXMLElement($xmlstr);
         $result = array();
+        $errors = array();
 
         if ($root->getName() == 'assessmentItem') {
-            $result[] = $this->questiontoformfrom($root);
+            list($question, $err) = $this->questiontoformfrom($root);
+            $result[] = $question;
+            $errors = array_merge($errors, $err);
         } else if ($root->getName() == 'mathQuiz') {
             foreach ($root->assessmentItem as $assessmentitem) {
-                $result[] = $this->questiontoformfrom($assessmentitem);
+                list($question, $err) = $this->questiontoformfrom($assessmentitem);
+                $result[] = $question;
+                $errors = array_merge($errors, $err);
             }
         }
 
+        if (!empty($errors)) {
+            throw new stack_exception(implode("<br />", $errors));
+        }
         return $result;
     }
 
@@ -122,6 +130,7 @@ class qformat_stack extends qformat_default {
      */
     protected function questiontoformfrom($assessmentitem) {
 
+        $errors = array();
         $question = new stdClass();
         $question->qtype                 = 'stack';
         $question->name                  = (string) $assessmentitem->MetaData->dctitle->selection;
@@ -200,9 +209,9 @@ class qformat_stack extends qformat_default {
             if (array_key_exists($inputtype, $inputtypemapping)) {
                 $questionpart['type'] = $inputtypemapping[$inputtype];
             } else {
-                throw new Exception('STACK 2 importer tried to set an input type named ' .
-                        $inputtype.' for input ' . $questionpart['studentanskey'] .
-                        '.  This has not yet been implemented in STACK 3.');
+                $errors[] = 'Tried to set an input type named ' .
+                        $inputtype.' for input ' . (string) $questionpartxml->name .
+                        ' in question '.$question->name.'.  This has not yet been implemented in STACK 3.';
             }
 
             $inputoptions = array();
@@ -363,7 +372,7 @@ class qformat_stack extends qformat_default {
             unset ($question->testcases[0]);
         }
 
-        return $question;
+        return array($question, $errors);
     }
 
     /**
