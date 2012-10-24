@@ -94,7 +94,7 @@ class qformat_stack extends qformat_default {
         }
 
         if (!empty($errors)) {
-            throw new stack_exception(implode("<br />", $errors));
+            throw new stack_exception(implode('<br .>', $errors));
         }
         return $result;
     }
@@ -129,6 +129,9 @@ class qformat_stack extends qformat_default {
      * @return the question as an array
      */
     protected function questiontoformfrom($assessmentitem) {
+
+        // Set this to false to enable a range of conversions.
+        $strict_import = true;
 
         $errors = array();
         $question = new stdClass();
@@ -209,9 +212,13 @@ class qformat_stack extends qformat_default {
             if (array_key_exists($inputtype, $inputtypemapping)) {
                 $questionpart['type'] = $inputtypemapping[$inputtype];
             } else {
-                $errors[] = 'Tried to set an input type named ' .
-                        $inputtype.' for input ' . (string) $questionpartxml->name .
-                        ' in question '.$question->name.'.  This has not yet been implemented in STACK 3.';
+                if ($strict_import) {
+                    $errors[] = 'Tried to set an input type named ' .
+                            $inputtype.' for input ' . (string) $questionpartxml->name .
+                            ' in question '.$question->name.'.  This has not yet been implemented in STACK 3.';
+                } else {
+                    $questionpart['type'] = 'algebraic';
+                }
             }
 
             $inputoptions = array();
@@ -308,9 +315,20 @@ class qformat_stack extends qformat_default {
                 $potentialresponses[$id] = $pr;
             }
 
+            $numerical_fields = array('truescore', 'falsescore', 'truepenalty', 'falsepenalty'); 
             foreach ($potentialresponses as $prname => $pr) {
                 foreach ($pr as $key => $val) {
                     $prt[$key][$prname] = $val;
+                    if (in_array($key, $numerical_fields) and '' != $val) {
+                        if (!($this->convert_floats($val) === (string) $val)) {
+                            if ($strict_import) {
+                                $errors[] = 'Tried to set a numerical field '.$key.' in potential response tree ' . $prname .
+                                        ' in question '.$question->name.'. with the illegal value. '.$val.'. This must be a float. ';
+                            } else {
+                                $prt[$key][$prname] = $this->convert_floats($val);
+                            }
+                        }   
+                    }
                 }
             }
             $potentialresponsetrees[$name] = $prt;
@@ -451,5 +469,14 @@ class qformat_stack extends qformat_default {
             $name = 'prt' . $name;
         }
         return $name;
+    }
+
+    /**
+     * Make sure numerical values really are floats
+     * @param  string incoming value
+     * @return string converted float.
+     */
+    public function convert_floats($val) {
+            return $val = (string) floatval($val);
     }
 }
