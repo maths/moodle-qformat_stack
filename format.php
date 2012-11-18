@@ -308,6 +308,15 @@ class qformat_stack extends qformat_default {
                 foreach (array('true', 'false') as $branchname) {
                     $branch = $this->getnextPR($branchname, $prxml);
                     foreach ($branch as $key => $val) {
+                        if ('answernote' == $key and '' == trim($val)) {
+                            $ids = (string) ($id+1);
+                            $val = $name.'-'.$ids.'-';
+                            if ('true' == $branchname) {
+                                $val .= 'T';
+                            } else {
+                                $val .= 'F';
+                            }
+                        }
                         $pr[$branchname . $key] = $val;
                     }
                 }
@@ -320,19 +329,19 @@ class qformat_stack extends qformat_default {
                 foreach ($pr as $key => $val) {
                     $prt[$key][$prname] = $val;
                     if (in_array($key, $numerical_fields) and '' != $val) {
-						// Tidy up numerical values.
-                    	$val = trim($val);
-                    	if (substr($val, 0, 1) == '.') {
-                    		$val = '0'.$val;
-                    	}
+                        // Tidy up numerical values.
+                        $val = trim($val);
+                        if (substr($val, 0, 1) == '.') {
+                            $val = '0'.$val;
+                        }
                         if (!($this->convert_floats($val) === (string) $val)) {
                             if ($strict_import) {
                                 $errors[] = 'Tried to set a numerical field "'.$key.'" in potential response tree "' . $prname .
-                                        '" in question "'.$question->name.'". with the illegal value "'.$val.'". This must be a float. ';
+                                '" in question "'.$question->name.'". with the illegal value "'.$val.'". This must be a float. ';
                             } else {
                                 $prt[$key][$prname] = $this->convert_floats($val);
                             }
-                        }   
+                        }
                     }
                 }
             }
