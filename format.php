@@ -267,6 +267,13 @@ class qformat_stack extends qformat_default {
             // STACK adds this for export purposes, because it can't cope with PRTs which are just a number.
             $name = str_replace('PotResTree_', '', $name);
 
+            if (strlen($name)>32) {
+                if ($strict_import) {
+                    $errors[] = 'The PRT name "'.$name.'" exceeds 32 characters and is too long.';
+                }
+                $name = substr($name, 0, 31);
+            }
+
             $prt = array();
             $prt['value'] = (int) $prtxml->questionValue;
             $prt['autosimplify'] = $this->convert_bools((string) $prtxml->autoSimplify);
@@ -391,7 +398,11 @@ class qformat_stack extends qformat_default {
                         if ('NONE' == $val) {
                             $val = 'NULL';
                         }
-                        $prts[$this->convert_prt_name(substr($key, 15))] = $val;
+                        $key = $this->convert_prt_name(substr($key, 15));
+                        if (strlen($key)>32) {
+                            $key = substr($key, 0, 31);
+                        }
+                        $prts[$key] = $val;
                     }
                 }
                 $qtest = new stack_question_test($inputs);
