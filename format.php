@@ -257,8 +257,14 @@ class qformat_stack extends qformat_default {
                 $question->$questionkey = $val;
             }
         }
+
         // Change the input tags for the new versions.
-        $question->questiontext = $this->convert_questiontext($question->questiontext, $inputnames);
+        $question->questiontext        = $this->convert_questiontext($question->questiontext, $inputnames);
+        $question->specificfeedback    = $this->fix_maths_delimiters($question->specificfeedback);
+        $question->generalfeedback     = $this->fix_maths_delimiters($question->generalfeedback);
+        $question->prtcorrect          = $this->fix_maths_delimiters($question->prtcorrect);
+        $question->prtpartiallycorrect = $this->fix_maths_delimiters($question->prtpartiallycorrect);
+        $question->prtincorrect        = $this->fix_maths_delimiters($question->prtincorrect);
 
         // Potential response trees.
         $potentialresponsetrees = array();
@@ -481,7 +487,11 @@ class qformat_stack extends qformat_default {
             $questiontext = str_replace('#'.$name.'#', "[[input:$name]]", $questiontext);
             $questiontext = str_replace('<IEfeedback>'.$name.'</IEfeedback>', "[[validation:$name]]", $questiontext);
         }
-        return $questiontext;
+        return $this->fix_maths_delimiters($questiontext);
+    }
+
+    public function fix_maths_delimiters($text) {
+        return stack_maths::replace_dollars($text);
     }
 
     /**
