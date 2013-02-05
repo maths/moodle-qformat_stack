@@ -94,7 +94,7 @@ class qformat_stack extends qformat_default {
         }
 
         if (!empty($errors)) {
-            throw new stack_exception(implode('<br .>', $errors));
+            throw new stack_exception(implode('<br />', $errors));
         }
         return $result;
     }
@@ -259,12 +259,12 @@ class qformat_stack extends qformat_default {
         }
 
         // Change the input tags for the new versions.
-        $question->questiontext        = $this->convert_questiontext($question->questiontext, $inputnames);
-        $question->specificfeedback    = $this->fix_maths_delimiters($question->specificfeedback);
-        $question->generalfeedback     = $this->fix_maths_delimiters($question->generalfeedback);
-        $question->prtcorrect          = $this->fix_maths_delimiters($question->prtcorrect);
-        $question->prtpartiallycorrect = $this->fix_maths_delimiters($question->prtpartiallycorrect);
-        $question->prtincorrect        = $this->fix_maths_delimiters($question->prtincorrect);
+        $question->questiontext                = $this->convert_questiontext($question->questiontext, $inputnames);
+        $question->specificfeedback['text']    = $this->fix_maths_delimiters($question->specificfeedback['text']);
+        $question->generalfeedback             = $this->fix_maths_delimiters($question->generalfeedback);
+        $question->prtcorrect['text']          = $this->fix_maths_delimiters($question->prtcorrect['text']);
+        $question->prtpartiallycorrect['text'] = $this->fix_maths_delimiters($question->prtpartiallycorrect['text']);
+        $question->prtincorrect['text']        = $this->fix_maths_delimiters($question->prtincorrect['text']);
 
         // Potential response trees.
         $potentialresponsetrees = array();
