@@ -183,6 +183,7 @@ class qformat_stack extends qformat_default {
         $question->multiplicationsign    = $itemoptions['MultiplicationSign'];
         $question->sqrtsign              = $itemoptions['SqrtSign'];
         $question->complexno             = $itemoptions['ComplexNo'];
+        $question->inversetrig           = 'cos-1';
         $question->prtcorrect            = array('text' => $itemoptions['FeedbackGenericCorrect'],
                                                                 'format' => FORMAT_HTML, 'files' => array());
         $question->prtpartiallycorrect   = array('text' => $itemoptions['FeedbackGenericPCorrect'],
@@ -245,6 +246,7 @@ class qformat_stack extends qformat_default {
             // STACK 2 exporter does not seem to export these correctly anyway!
             $questionpart['mustverify']         = 1;
             $questionpart['showvalidation']     = 1;
+            $questionpart['options']            = '';
 
             $name = (string) $questionpartxml->name;
             $questionparts[$name] = $questionpart;
