@@ -339,7 +339,7 @@ class qformat_stack extends qformat_default {
                 $potentialresponses[$id] = $pr;
             }
 
-            $numerical_fields = array('truescore', 'falsescore', 'truepenalty', 'falsepenalty'); 
+            $numerical_fields = array('truescore', 'falsescore', 'truepenalty', 'falsepenalty');
             foreach ($potentialresponses as $prname => $pr) {
                 foreach ($pr as $key => $val) {
                     $prt[$key][$prname] = $val;
