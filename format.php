@@ -184,6 +184,7 @@ class qformat_stack extends qformat_default {
         $question->sqrtsign              = $itemoptions['SqrtSign'];
         $question->complexno             = $itemoptions['ComplexNo'];
         $question->inversetrig           = 'cos-1';
+        $question->matrixparens          = '[';
         $question->prtcorrect            = array('text' => $itemoptions['FeedbackGenericCorrect'],
                                                                 'format' => FORMAT_HTML, 'files' => array());
         $question->prtpartiallycorrect   = array('text' => $itemoptions['FeedbackGenericPCorrect'],
@@ -239,8 +240,9 @@ class qformat_stack extends qformat_default {
             $questionpart['insertstars']        = $inputoptions['insertStars'];
             $questionpart['syntaxhint']         = (string) $questionpartxml->syntax;
             $questionpart['forbidwords']        = (string) $questionpartxml->forbiddenWords->Forbid;
+            $questionpart['allowwords']         = '';
             $questionpart['forbidfloat']        = $inputoptions['forbidFloats'];
-            $questionpart['requirelowestterms'] = $inputoptions['lowestTerms'];
+            $questionpart['requirelowestterms'] = (bool) $inputoptions['lowestTerms'];
             $questionpart['checkanswertype']    = $inputoptions['sameType'];
             $questionpart['strictsyntax']       = $inputoptions['formalSyntax'];
             // STACK 2 exporter does not seem to export these correctly anyway!
