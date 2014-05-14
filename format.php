@@ -242,7 +242,12 @@ class qformat_stack extends qformat_default {
             $questionpart['forbidwords']        = (string) $questionpartxml->forbiddenWords->Forbid;
             $questionpart['allowwords']         = '';
             $questionpart['forbidfloat']        = $inputoptions['forbidFloats'];
-            $questionpart['requirelowestterms'] = (bool) $inputoptions['lowestTerms'];
+            // Export error: STACK 2 exporter does not seem to export these correctly
+            if (array_key_exists('lowestTerms', $inputoptions)) {
+                $questionpart['requirelowestterms'] = (bool) $inputoptions['lowestTerms'];
+            } else {
+                $questionpart['requirelowestterms'] = true;
+            }
             $questionpart['checkanswertype']    = $inputoptions['sameType'];
             $questionpart['strictsyntax']       = $inputoptions['formalSyntax'];
             // STACK 2 exporter does not seem to export these correctly anyway!
