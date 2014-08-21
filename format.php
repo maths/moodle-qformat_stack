@@ -55,9 +55,9 @@ class qformat_stack extends qformat_default {
 
     protected function text_field($text) {
         return array(
-            'text' => htmlspecialchars(trim($text), ENT_NOQUOTES),
+            'text'   => htmlspecialchars(trim($text), ENT_NOQUOTES),
             'format' => FORMAT_HTML,
-            'files' => array(),
+            'files'  => array(),
         );
     }
 
@@ -131,7 +131,7 @@ class qformat_stack extends qformat_default {
     protected function questiontoformfrom($assessmentitem) {
 
         // Set this to false to enable a range of conversions.
-        $strict_import = true;
+        $strictimport = true;
 
         $errors = array();
         $question = new stdClass();
@@ -153,7 +153,7 @@ class qformat_stack extends qformat_default {
         $question->questionvariables     = $this->convert_keyvals((string)
                                                 $assessmentitem->questionCasValues->questionVariables->rawKeyVals);
         $newnote = (string) $assessmentitem->questionCasValues->questionNote->castext;
-        if (strlen($newnote)>255) {
+        if (strlen($newnote) > 255) {
             $question->questiontext .= "Question note too long on import:\n\n".$newnote;
             $question->questionnote  = "ERROR on import: question note too long.  See question text.";
         } else {
@@ -214,7 +214,7 @@ class qformat_stack extends qformat_default {
             if (array_key_exists($inputtype, $inputtypemapping)) {
                 $questionpart['type'] = $inputtypemapping[$inputtype];
             } else {
-                if ($strict_import) {
+                if ($strictimport) {
                     $errors[] = 'Tried to set an input type named ' .
                             $inputtype.' for input ' . (string) $questionpartxml->name .
                             ' in question '.$question->name.'.  This has not yet been implemented in STACK 3.';
@@ -231,7 +231,7 @@ class qformat_stack extends qformat_default {
             }
 
             $questionpart['modelans']               = (string) $questionpartxml->teachersAns->casString;
-            if (strlen($questionpart['modelans'])>255) {
+            if (strlen($questionpart['modelans']) > 255) {
                 $question->questionvariables .= "\n/*Automatically added by the importer*/";
                 $question->questionvariables .= "\nlonganswer".$name.':'.$questionpart['modelans']."\n";
                 $questionpart['modelans'] = 'longanswer'.$name;
@@ -242,7 +242,7 @@ class qformat_stack extends qformat_default {
             $questionpart['forbidwords']        = (string) $questionpartxml->forbiddenWords->Forbid;
             $questionpart['allowwords']         = '';
             $questionpart['forbidfloat']        = $inputoptions['forbidFloats'];
-            // Export error: STACK 2 exporter does not seem to export these correctly
+            // Export error: STACK 2 exporter does not seem to export these correctly.
             if (array_key_exists('lowestTerms', $inputoptions)) {
                 $questionpart['requirelowestterms'] = (bool) $inputoptions['lowestTerms'];
             } else {
@@ -282,9 +282,9 @@ class qformat_stack extends qformat_default {
             // STACK adds this for export purposes, because it can't cope with PRTs which are just a number.
             $name = str_replace('PotResTree_', '', $name);
 
-            if (strlen($name)>32) {
-                if ($strict_import) {
-                    $errors[] = 'The PRT name "'.$name.'" exceeds 32 characters and is too long.';
+            if (strlen($name) > 32) {
+                if ($strictimport) {
+                    $errors[] = 'The PRT name "' . $name . '" exceeds 32 characters and is too long.';
                 }
                 $name = substr($name, 0, 31);
             }
@@ -306,24 +306,24 @@ class qformat_stack extends qformat_default {
                     $pr['answertest'] = 'EqualComAss';
                 }
                 $pr['tans'] = (string) $prxml->teachersAns;
-                if (strlen($pr['tans'])>255) {
+                if (strlen($pr['tans']) > 255) {
                     $prt['feedbackvariables']  .= "\n/*Automatically added by the importer*/";
                     $prt['feedbackvariables']  .= "\nlongexpr".$autonumber.':'.$pr['tans']."\n";
-                    $autonumber +=1;
+                    $autonumber += 1;
                     $pr['tans'] = 'longexpr'.$autonumber;
                 }
                 $pr['sans'] = (string) $prxml->studentAns;
-                if (strlen($pr['sans'])>255) {
+                if (strlen($pr['sans']) > 255) {
                     $prt['feedbackvariables']  .= "\n/*Automatically added by the importer*/";
                     $prt['feedbackvariables']  .= "\nlongexpr".$autonumber.':'.$pr['sans']."\n";
-                    $autonumber +=1;
+                    $autonumber += 1;
                     $pr['sans'] = 'longexpr'.$autonumber;
                 }
                 $pr['testoptions'] = (string) $prxml->testoptions;
-                if (strlen($pr['testoptions'])>255) {
+                if (strlen($pr['testoptions']) > 255) {
                     $prt['feedbackvariables']  .= "\n/*Automatically added by the importer*/";
                     $prt['feedbackvariables']  .= "\nlongexpr".$autonumber.':'.$pr['testoptions']."\n";
-                    $autonumber +=1;
+                    $autonumber += 1;
                     $pr['testoptions'] = 'longexpr'.$autonumber;
                 }
                 $pr['quiet'] = (string) $prxml->quietAnsTest;
@@ -331,7 +331,7 @@ class qformat_stack extends qformat_default {
                     $branch = $this->getnextPR($branchname, $prxml);
                     foreach ($branch as $key => $val) {
                         if ('answernote' == $key and '' == trim($val)) {
-                            $ids = (string) ($id+1);
+                            $ids = (string) ($id + 1);
                             $val = $name.'-'.$ids.'-';
                             if ('true' == $branchname) {
                                 $val .= 'T';
@@ -346,18 +346,18 @@ class qformat_stack extends qformat_default {
                 $potentialresponses[$id] = $pr;
             }
 
-            $numerical_fields = array('truescore', 'falsescore', 'truepenalty', 'falsepenalty');
+            $numericalfields = array('truescore', 'falsescore', 'truepenalty', 'falsepenalty');
             foreach ($potentialresponses as $prname => $pr) {
                 foreach ($pr as $key => $val) {
                     $prt[$key][$prname] = $val;
-                    if (in_array($key, $numerical_fields) and '' != $val) {
+                    if (in_array($key, $numericalfields) and '' != $val) {
                         // Tidy up numerical values.
                         $val = trim($val);
                         if (substr($val, 0, 1) == '.') {
                             $val = '0'.$val;
                         }
                         if (!($this->convert_floats($val) === (string) $val)) {
-                            if ($strict_import) {
+                            if ($strictimport) {
                                 $errors[] = 'Tried to set a numerical field "'.$key.'" in potential response tree "' . $prname .
                                 '" in question "'.$question->name.'". with the illegal value "'.$val.'". This must be a float. ';
                             } else {
@@ -414,7 +414,7 @@ class qformat_stack extends qformat_default {
                             $val = 'NULL';
                         }
                         $key = $this->convert_prt_name(substr($key, 15));
-                        if (strlen($key)>32) {
+                        if (strlen($key) > 32) {
                             $key = substr($key, 0, 31);
                         }
                         $prts[$key] = $val;
@@ -442,10 +442,10 @@ class qformat_stack extends qformat_default {
     public function convert_keyvals($strin) {
 
         $str = str_replace(';', "\n", $strin);
-        $kv_array = explode("\n", $str);
+        $kvarray = explode("\n", $str);
 
         $strout = '';
-        foreach ($kv_array as $kvs) {
+        foreach ($kvarray as $kvs) {
             $kvs = trim($kvs);
             if ('' != $kvs) {
                 // Split over the first occurrence of the equals sign, turning this into normal Maxima assignment.
@@ -454,10 +454,10 @@ class qformat_stack extends qformat_default {
                     $val = $kvs;
                 } else {
                     // Need to check we don't have a function definition...
-                    if (':'===substr($kvs, $i-1, 1)) {
+                    if (':' === substr($kvs, $i - 1, 1)) {
                         $val = $kvs;
                     } else {
-                        $val = trim(trim(substr($kvs, 0, $i)).':'.trim(substr($kvs, $i+1)));
+                        $val = trim(trim(substr($kvs, 0, $i)) . ':' . trim(substr($kvs, $i + 1)));
                     }
                 }
 
@@ -496,7 +496,7 @@ class qformat_stack extends qformat_default {
             $questiontext = str_replace('#'.$name.'#', "[[input:$name]]", $questiontext);
             $questiontext = str_replace('<IEfeedback>'.$name.'</IEfeedback>', "[[validation:$name]]", $questiontext);
         }
-    
+
         $found = stack_utils::substring_between($questiontext, '<hint>', '</hint>');
         if ($found[1] > 0) {
             $hints = new stack_hints($questiontext);
