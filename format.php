@@ -497,11 +497,7 @@ class qformat_stack extends qformat_default {
             $questiontext = str_replace('<IEfeedback>'.$name.'</IEfeedback>', "[[validation:$name]]", $questiontext);
         }
 
-        $found = stack_utils::substring_between($questiontext, '<hint>', '</hint>');
-        if ($found[1] > 0) {
-            $hints = new stack_hints($questiontext);
-            $questiontext = $hints->legacy_convert();
-        }
+        $questiontext = stack_fact_sheets::convert_legacy_tags($questiontext);
 
         return $this->fix_maths_delimiters($questiontext);
     }
