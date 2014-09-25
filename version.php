@@ -25,13 +25,13 @@
 defined('MOODLE_INTERNAL') || die();
 
 
-$plugin->version   = 2014051400;
-$plugin->requires  = 2012120300;
+$plugin->version   = 2014092500;
+$plugin->requires  = 2013101800;
 $plugin->cron      = 0;
 $plugin->component = 'qformat_stack';
-$plugin->maturity = MATURITY_STABLE;
-$plugin->release = '3.2 for Moodle 2.4+';
+$plugin->maturity  = MATURITY_STABLE;
+$plugin->release   = '3.3 for Moodle 2.6+';
 
 $plugin->dependencies = array(
-    'qtype_stack' => 2014011500,
+    'qtype_stack' => 2014092500,
 );
